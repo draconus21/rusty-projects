@@ -1,7 +1,7 @@
 mod tests;
 
 #[derive(PartialEq, Debug)]
-pub struct Date {
+pub struct Time {
     day: u32,
     month: u32,
     year: u32,
@@ -12,9 +12,9 @@ pub struct Date {
 fn is_leap_year(year: &u32) -> bool {
     (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0)
 }
-impl Date {
+impl Time {
     pub fn new(hrs: u32, mins: u32, day: u32, month: u32, year: u32) -> Self {
-        // A valid date must be after Jan 1, 2000 and before Jan 1, 2100
+        // A valid time must be after Jan 1, 2000 and before Jan 1, 2100
 
         if year < 2000 || year >= 2100 {
             panic!("Year must be between 2000 and 2099, got {:?}", year);
@@ -108,7 +108,7 @@ impl Date {
     }
 }
 
-impl PartialOrd for Date {
+impl PartialOrd for Time {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.as_mins().cmp(&other.as_mins()))
     }
