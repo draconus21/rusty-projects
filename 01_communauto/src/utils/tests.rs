@@ -15,6 +15,12 @@ mod tests {
         Time::new(0, 0, 1, 1, 2000);
         // largest valid time
         Time::new(23, 59, 31, 12, 2099);
+
+        // set bools
+        let t2 = Time::new(22, 15, 1, 2, 2003);
+        let t3 = Time::new(23, 15, 1, 2, 2003);
+        assert_eq!(t, t2);
+        assert_ne!(t, t3);
     }
 
     #[test]

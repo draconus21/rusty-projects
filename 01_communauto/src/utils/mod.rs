@@ -1,6 +1,6 @@
 mod tests;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Time {
     day: u32,
     month: u32,
