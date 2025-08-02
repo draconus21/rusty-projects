@@ -50,6 +50,26 @@ impl Time {
             mins: mins,
         }
     }
+    pub fn now() -> Self {
+        // for now this func will always return a hard-coded date-time
+        Self {
+            hrs: 9 as u32,
+            mins: 32 as u32,
+            day: 2 as u32,
+            month: 8 as u32,
+            year: 2025 as u32,
+        }
+    }
+    pub fn tomorrow() -> Self {
+        // for now this func will always return a hard-coded date-time
+        Self {
+            hrs: 9 as u32,
+            mins: 32 as u32,
+            day: 3 as u32,
+            month: 8 as u32,
+            year: 2025 as u32,
+        }
+    }
     pub fn day(&self) -> u32 {
         self.day
     }

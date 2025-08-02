@@ -9,13 +9,17 @@ pub struct OpenTrip {
     distance: u32,
 }
 impl OpenTrip {
-    pub fn new(start_time: Time, end_time: Time, distance: u32) -> Self {
-        if start_time > end_time {
+    fn validate_trip_time(start_time: Time, end_time: Time) {
+        if start_time >= end_time {
             panic!(
                 "Trip start time {:?} cannot be after end time {:?}",
                 start_time, end_time
             )
         }
+    }
+
+    pub fn new(start_time: Time, end_time: Time, distance: u32) -> Self {
+        OpenTrip::validate_trip_time(start_time, end_time);
         Self {
             start_time,
             end_time,
@@ -26,8 +30,24 @@ impl OpenTrip {
     pub fn start_time(&self) -> &Time {
         &self.start_time
     }
+    pub fn set_start_time(&self, start_time: Time) -> Self {
+        OpenTrip::validate_trip_time(start_time, self.end_time);
+        Self {
+            start_time: start_time,
+            end_time: self.end_time,
+            distance: self.distance,
+        }
+    }
     pub fn end_time(&self) -> &Time {
         &self.end_time
+    }
+    pub fn set_end_time(&self, end_time: Time) -> Self {
+        OpenTrip::validate_trip_time(self.start_time, end_time);
+        Self {
+            start_time: self.start_time,
+            end_time: end_time,
+            distance: self.distance,
+        }
     }
     pub fn distance(&self) -> &u32 {
         &self.distance

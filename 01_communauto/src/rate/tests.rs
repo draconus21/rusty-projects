@@ -4,12 +4,12 @@ mod tests {
     use super::super::Cost;
     use super::super::OpenTrip;
     use super::super::Time;
-    use more_asserts::*;
+    use assert_float_eq::*;
 
     #[test]
     fn test_create_open_trip() {
-        let now = Time::new(19, 42, 1, 8, 2025);
-        let tomorrow = Time::new(19, 42, 2, 8, 2025);
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
 
         let t = OpenTrip::new(now, tomorrow, 30);
         assert_eq!(*t.start_time(), now);
@@ -18,23 +18,58 @@ mod tests {
     }
 
     #[test]
+    fn test_setters() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        let t = OpenTrip::new(now, tomorrow, 30);
+        assert_eq!(
+            *t.set_start_time(Time::new(0, 0, 1, 2, 2003)).start_time(),
+            Time::new(0, 0, 1, 2, 2003)
+        );
+
+        assert_eq!(
+            *t.set_start_time(Time::new(0, 0, 1, 2, 2003)).start_time(),
+            Time::new(0, 0, 1, 2, 2003)
+        );
+    }
+    #[test]
+    #[should_panic]
+    fn test_invalid_start() {
+        let now = Time::new(19, 42, 1, 8, 2025);
+        let tomorrow = Time::new(19, 42, 2, 8, 2025);
+
+        let t = OpenTrip::new(now, tomorrow, 30);
+        t.set_end_time(now);
+    }
+    #[test]
+    #[should_panic]
+    fn test_invalid_end() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        let t = OpenTrip::new(now, tomorrow, 30);
+        t.set_start_time(tomorrow);
+    }
+
+    #[test]
     #[should_panic]
     fn test_invalid_trip() {
-        let now = Time::new(20, 2, 1, 8, 2025);
-        let tomorrow = Time::new(20, 2, 2, 8, 2025);
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
 
         OpenTrip::new(tomorrow, now, 30);
     }
 
     #[test]
     fn test_km_cost() {
-        let now = Time::new(20, 3, 1, 8, 2025);
-        let tomorrow = Time::new(20, 3, 2, 8, 2025);
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
 
         let mut t = OpenTrip::new(now, tomorrow, 50);
         assert_eq!(t.km_cost(), 0.0);
 
         t = t.set_distance(175);
-        assert_le!((t.km_cost() - 27.0).abs(), f32::EPSILON);
+        assert_f32_near!(t.km_cost(), 27.0);
     }
 }
