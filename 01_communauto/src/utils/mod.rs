@@ -39,7 +39,7 @@ impl Time {
             panic!("Invalid hours, got {:?}", hrs);
         }
         if mins > 59 {
-            panic!("Invalid minutes, got {:?}", mins)
+            panic!("Invalid minutes, got {:?}", mins);
         }
 
         Self {
@@ -95,7 +95,7 @@ impl Time {
         self.as_mins().saturating_sub(other.as_mins())
     }
 
-    fn as_mins(&self) -> u32 {
+    pub fn as_mins(&self) -> u32 {
         // Assmue that time starts on Jan 1, 2000
 
         let mut n_days: u32 = 0;
@@ -133,5 +133,39 @@ impl Time {
 impl PartialOrd for Time {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.as_mins().cmp(&other.as_mins()))
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct TripDuration {
+    hours: f32,
+    days: u32,
+    weeks: u32,
+}
+impl TripDuration {
+    pub fn from_minutes(minutes: u32) -> Self {
+        Self {
+            weeks: minutes / (7 * 24 * 60),
+            days: (minutes % (7 * 24 * 60)) / (24 * 60),
+            hours: ((minutes % (7 * 24 * 60)) % (24 * 60)) as f32 / 60.0,
+        }
+    }
+    pub fn from_times(start_time: &Time, end_time: &Time) -> Self {
+        if start_time >= end_time {
+            panic!(
+                "start time {:?} cannot be after end time {:?}",
+                start_time, end_time
+            )
+        }
+        Self::from_minutes(end_time.as_mins() - start_time.as_mins())
+    }
+    pub fn hours(&self) -> &f32 {
+        &self.hours
+    }
+    pub fn days(&self) -> &u32 {
+        &self.days
+    }
+    pub fn weeks(&self) -> &u32 {
+        &self.weeks
     }
 }

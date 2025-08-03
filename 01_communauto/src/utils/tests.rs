@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod tests_time {
     use super::super::Time;
 
     #[test]
@@ -71,5 +71,68 @@ mod tests {
         let d2 = Time::new(2, 21, 31, 7, 2015);
         assert_eq!(d2.sub(&d1), 16 * 24 * 60);
         assert_eq!(d1.sub(&d2), 0);
+    }
+}
+
+#[cfg(test)]
+mod test_trip_duration {
+    use super::super::{Time, TripDuration};
+
+    #[test]
+    fn test_set_1() {
+        let mut d = TripDuration::from_minutes(3);
+        assert_eq!(
+            d,
+            TripDuration {
+                hours: 3.0 / 60.0,
+                days: 0,
+                weeks: 0
+            }
+        );
+
+        d = TripDuration::from_minutes(65);
+        assert_eq!(
+            d,
+            TripDuration {
+                hours: 65.0 / 60.0,
+                days: 0,
+                weeks: 0
+            }
+        );
+
+        d = TripDuration::from_minutes(90 + 2 * 24 * 60);
+        assert_eq!(
+            d,
+            TripDuration {
+                hours: 1.5,
+                days: 2,
+                weeks: 0
+            }
+        );
+
+        d = TripDuration::from_minutes(90 + 6 * 24 * 60 + 4 * 7 * 24 * 60);
+        assert_eq!(
+            d,
+            TripDuration {
+                hours: 1.5,
+                days: 6,
+                weeks: 4
+            }
+        );
+    }
+
+    #[test]
+    fn test_set_2() {
+        let s = Time::new(15, 55, 2, 12, 2005);
+        let e = Time::new(22, 29, 14, 12, 2005);
+        let d = TripDuration::from_times(&s, &e);
+        assert_eq!(
+            d,
+            TripDuration {
+                hours: 6 as f32 + 34.0 / 60.0,
+                days: 5,
+                weeks: 1
+            }
+        );
     }
 }

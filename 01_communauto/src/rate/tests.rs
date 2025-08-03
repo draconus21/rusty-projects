@@ -72,4 +72,13 @@ mod tests {
         t = t.set_distance(175);
         assert_f32_near!(t.km_cost(), 27.0);
     }
+
+    #[test]
+    fn test_time_cost_case_1() {
+        let start = Time::new(16, 32, 3, 8, 2025);
+        let end = Time::new(18, 32, 3, 8, 2025);
+
+        let t = OpenTrip::new(start, end, 10);
+        assert_f32_near!(t.time_cost(), 27.0);
+    }
 }

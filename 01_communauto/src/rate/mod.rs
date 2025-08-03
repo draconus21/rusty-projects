@@ -1,6 +1,6 @@
 mod tests;
 
-use super::utils::Time;
+use super::utils::{Time, TripDuration};
 
 #[derive(PartialEq, Debug)]
 pub struct OpenTrip {
@@ -59,13 +59,17 @@ impl OpenTrip {
             distance: distance,
         }
     }
+
+    fn trip_time(&self) -> TripDuration {
+        TripDuration::from_times(self.start_time(), self.end_time())
+    }
 }
 
 trait Cost {
     // cost for distance
     fn km_cost(&self) -> f32;
+    fn time_cost(&self) -> f32;
     //fn trip_cost(&self, start_time: Time, end_time: Time, distance: i16) -> f32;
-    //fn time_cost(&self, start_time: Time, end_time: Time) -> f32
 }
 
 impl Cost for OpenTrip {
@@ -75,5 +79,30 @@ impl Cost for OpenTrip {
         } else {
             (self.distance - 75) as f32 * 0.27 as f32
         }
+    }
+
+    fn time_cost(&self) -> f32 {
+        let duration: TripDuration = self.trip_time();
+
+        let total_days: u32 = duration.days() + duration.weeks() * 7;
+        let hour_cost: f32 = duration.hours() * 13.5;
+
+        // Case 1: less that 24 hours
+        if total_days == 0 {
+            // Min of hourly rate vs day rate
+            if hour_cost < 55.0 {
+                return hour_cost;
+            } else {
+                return 55.0;
+            }
+        }
+
+        // Case 2: 24 hrs < duration < 48 hrs
+        if total_days == 1 {
+            return 55.0 + hour_cost;
+        }
+
+        // Case 3: > 48 hours
+        55.0 + 50.0 * (total_days - 1) as f32 + hour_cost
     }
 }
