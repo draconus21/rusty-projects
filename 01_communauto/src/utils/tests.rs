@@ -136,3 +136,65 @@ mod test_trip_duration {
         );
     }
 }
+
+#[cfg(test)]
+mod test_trip {
+
+    use super::super::Time;
+    use super::super::Trip;
+
+    #[test]
+    fn test_create_open_trip() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        let t = Trip::new(now, tomorrow, 30);
+        assert_eq!(*t.start_time(), now);
+        assert_eq!(*t.end_time(), tomorrow);
+        assert_eq!(*t.distance(), 30);
+    }
+
+    #[test]
+    fn test_setters() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        let t = Trip::new(now, tomorrow, 30);
+        assert_eq!(
+            *t.set_start_time(Time::new(0, 0, 1, 2, 2003)).start_time(),
+            Time::new(0, 0, 1, 2, 2003)
+        );
+
+        assert_eq!(
+            *t.set_start_time(Time::new(0, 0, 1, 2, 2003)).start_time(),
+            Time::new(0, 0, 1, 2, 2003)
+        );
+    }
+    #[test]
+    #[should_panic]
+    fn test_invalid_start() {
+        let now = Time::new(19, 42, 1, 8, 2025);
+        let tomorrow = Time::new(19, 42, 2, 8, 2025);
+
+        let t = Trip::new(now, tomorrow, 30);
+        t.set_end_time(now);
+    }
+    #[test]
+    #[should_panic]
+    fn test_invalid_end() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        let t = Trip::new(now, tomorrow, 30);
+        t.set_start_time(tomorrow);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_trip() {
+        let now = Time::now();
+        let tomorrow = Time::tomorrow();
+
+        Trip::new(tomorrow, now, 30);
+    }
+}

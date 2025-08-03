@@ -1,71 +1,37 @@
 mod tests;
 
-use super::utils::{Time, TripDuration};
+use super::utils::{Time, Trip, TripDuration};
 use std::fmt::Display;
 
-#[derive(PartialEq, Debug)]
-pub struct Trip {
-    start_time: Time,
-    end_time: Time,
-    distance: u32,
+pub struct OpenTrip {
+    trip: Trip,
 }
-impl Trip {
-    fn validate_trip_time(start_time: Time, end_time: Time) {
-        if start_time >= end_time {
-            panic!(
-                "Trip start time {:?} cannot be after end time {:?}",
-                start_time, end_time
-            )
-        }
-    }
-
+impl OpenTrip {
     pub fn new(start_time: Time, end_time: Time, distance: u32) -> Self {
-        Self::validate_trip_time(start_time, end_time);
         Self {
-            start_time,
-            end_time,
-            distance,
+            trip: Trip::new(start_time, end_time, distance),
         }
     }
 
-    pub fn start_time(&self) -> &Time {
-        &self.start_time
-    }
-    pub fn set_start_time(&self, start_time: Time) -> Self {
-        Self::validate_trip_time(start_time, self.end_time);
+    // Shadow Trip functions
+    pub fn set_distance(&self, distance: u32) -> Self {
         Self {
-            start_time: start_time,
-            end_time: self.end_time,
-            distance: self.distance,
-        }
-    }
-    pub fn end_time(&self) -> &Time {
-        &self.end_time
-    }
-    pub fn set_end_time(&self, end_time: Time) -> Self {
-        Self::validate_trip_time(self.start_time, end_time);
-        Self {
-            start_time: self.start_time,
-            end_time: end_time,
-            distance: self.distance,
+            trip: self.trip.set_distance(distance),
         }
     }
     pub fn distance(&self) -> &u32 {
-        &self.distance
+        self.trip.distance()
     }
-    pub fn set_distance(&self, distance: u32) -> Self {
-        Self {
-            start_time: self.start_time,
-            end_time: self.end_time,
-            distance: distance,
-        }
+    pub fn start_time(&self) -> &Time {
+        self.trip.start_time()
     }
-
-    fn trip_time(&self) -> TripDuration {
-        TripDuration::from_times(self.start_time(), self.end_time())
+    pub fn end_time(&self) -> &Time {
+        self.trip.end_time()
+    }
+    pub fn trip_time(&self) -> TripDuration {
+        self.trip.trip_time()
     }
 }
-
 trait Cost {
     // cost for distance
     fn km_cost(&self) -> f32;
@@ -73,15 +39,15 @@ trait Cost {
     fn trip_cost(&self) -> f32;
 }
 
-impl Cost for Trip {
+impl Cost for OpenTrip {
     fn trip_cost(&self) -> f32 {
         self.km_cost() + self.time_cost()
     }
     fn km_cost(&self) -> f32 {
-        if self.distance < 75 {
+        if *self.distance() < 75 {
             0 as f32
         } else {
-            (self.distance - 75) as f32 * 0.27 as f32
+            (*self.distance() - 75) as f32 * 0.27 as f32
         }
     }
 
@@ -115,16 +81,13 @@ impl Cost for Trip {
     }
 }
 
-impl Display for Trip {
+impl Display for OpenTrip {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "--------------Plan: Open--------------")?;
-        writeln!(f, "From         : {}", self.start_time)?;
-        writeln!(f, "To           : {}", self.end_time)?;
-        writeln!(f, "Duration     : {}", self.trip_time())?;
+        writeln!(f, "{}", self.trip)?;
         writeln!(f, "Duration cost: {}", self.time_cost())?;
-        writeln!(f, "Distance     : {} km", self.distance)?;
         writeln!(f, "Distance cost: {}", self.km_cost())?;
         writeln!(f, "Total        : {}", self.trip_cost())?;
-        writeln!(f, "--------------------------------------")
+        write!(f, "--------------------------------------")
     }
 }
