@@ -51,23 +51,25 @@ impl Time {
         }
     }
     pub fn now() -> Self {
-        // for now this func will always return a hard-coded date-time
+        use chrono::{DateTime, Datelike, Local, Timelike};
+        let now: DateTime<Local> = Local::now();
         Self {
-            hrs: 9 as u32,
-            mins: 32 as u32,
-            day: 2 as u32,
-            month: 8 as u32,
-            year: 2025 as u32,
+            hrs: now.hour(),
+            mins: now.minute(),
+            day: now.day(),
+            month: now.month(),
+            year: now.year() as u32,
         }
     }
     pub fn tomorrow() -> Self {
-        // for now this func will always return a hard-coded date-time
+        use chrono::{DateTime, Datelike, Days, Local, Timelike};
+        let tomorrow: DateTime<Local> = Local::now() + Days::new(1);
         Self {
-            hrs: 9 as u32,
-            mins: 32 as u32,
-            day: 3 as u32,
-            month: 8 as u32,
-            year: 2025 as u32,
+            hrs: tomorrow.hour(),
+            mins: tomorrow.minute(),
+            day: tomorrow.day(),
+            month: tomorrow.month(),
+            year: tomorrow.year() as u32,
         }
     }
     pub fn day(&self) -> u32 {
