@@ -74,11 +74,28 @@ mod tests {
     }
 
     #[test]
-    fn test_time_cost_case_1() {
+    fn test_time_cost() {
         let start = Time::new(16, 32, 3, 8, 2025);
         let end = Time::new(18, 32, 3, 8, 2025);
 
-        let t = OpenTrip::new(start, end, 10);
+        // 2 hr trip
+        let mut t = OpenTrip::new(start, end, 10);
         assert_f32_near!(t.time_cost(), 27.0);
+
+        // 5 hr trip
+        t = OpenTrip::new(start, Time::new(21, 32, 3, 8, 2025), 10);
+        assert_f32_near!(t.time_cost(), 55.0);
+
+        // 12 hr trip
+        t = OpenTrip::new(start, Time::new(4, 32, 4, 8, 2025), 10);
+        assert_f32_near!(t.time_cost(), 55.0);
+
+        // 2-day trip
+        t = OpenTrip::new(start, Time::new(16, 32, 5, 8, 2025), 10);
+        assert_f32_near!(t.time_cost(), 105.0);
+
+        // 5.5 day trip
+        t = OpenTrip::new(start, Time::new(4, 32, 9, 8, 2025), 10);
+        assert_f32_near!(t.time_cost(), 305.0);
     }
 }

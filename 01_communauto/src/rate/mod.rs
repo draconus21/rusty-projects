@@ -1,6 +1,7 @@
 mod tests;
 
 use super::utils::{Time, TripDuration};
+use std::fmt::Display;
 
 #[derive(PartialEq, Debug)]
 pub struct OpenTrip {
@@ -69,10 +70,13 @@ trait Cost {
     // cost for distance
     fn km_cost(&self) -> f32;
     fn time_cost(&self) -> f32;
-    //fn trip_cost(&self, start_time: Time, end_time: Time, distance: i16) -> f32;
+    fn trip_cost(&self) -> f32;
 }
 
 impl Cost for OpenTrip {
+    fn trip_cost(&self) -> f32 {
+        self.km_cost() + self.time_cost()
+    }
     fn km_cost(&self) -> f32 {
         if self.distance < 75 {
             0 as f32
@@ -85,7 +89,7 @@ impl Cost for OpenTrip {
         let duration: TripDuration = self.trip_time();
 
         let total_days: u32 = duration.days() + duration.weeks() * 7;
-        let hour_cost: f32 = duration.hours() * 13.5;
+        let mut hour_cost: f32 = duration.hours() * 13.5;
 
         // Case 1: less that 24 hours
         if total_days == 0 {
@@ -97,6 +101,10 @@ impl Cost for OpenTrip {
             }
         }
 
+        // cap hour cost to 50$ for subsequent days
+        if hour_cost > 50.0 {
+            hour_cost = 50.0
+        }
         // Case 2: 24 hrs < duration < 48 hrs
         if total_days == 1 {
             return 55.0 + hour_cost;
@@ -104,5 +112,19 @@ impl Cost for OpenTrip {
 
         // Case 3: > 48 hours
         55.0 + 50.0 * (total_days - 1) as f32 + hour_cost
+    }
+}
+
+impl Display for OpenTrip {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "--------------Plan: Open--------------")?;
+        writeln!(f, "From         : {}", self.start_time)?;
+        writeln!(f, "To           : {}", self.end_time)?;
+        writeln!(f, "Duration     : {}", self.trip_time())?;
+        writeln!(f, "Duration cost: {}", self.time_cost())?;
+        writeln!(f, "Distance     : {} km", self.distance)?;
+        writeln!(f, "Distance cost: {}", self.km_cost())?;
+        writeln!(f, "Total        : {}", self.trip_cost())?;
+        writeln!(f, "--------------------------------------")
     }
 }

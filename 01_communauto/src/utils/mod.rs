@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 mod tests;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -50,6 +52,7 @@ impl Time {
             mins: mins,
         }
     }
+
     pub fn now() -> Self {
         use chrono::{DateTime, Datelike, Local, Timelike};
         let now: DateTime<Local> = Local::now();
@@ -135,6 +138,15 @@ impl PartialOrd for Time {
         Some(self.as_mins().cmp(&other.as_mins()))
     }
 }
+impl Display for Time {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}:{} {}-{}-{}",
+            self.hrs, self.mins, self.year, self.month, self.day
+        )
+    }
+}
 
 #[derive(PartialEq, Debug)]
 pub struct TripDuration {
@@ -167,5 +179,21 @@ impl TripDuration {
     }
     pub fn weeks(&self) -> &u32 {
         &self.weeks
+    }
+}
+
+impl Display for TripDuration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.weeks > 0 {
+            return write!(
+                f,
+                "{} weeks, {} days, {} hours",
+                self.weeks, self.days, self.hours
+            );
+        }
+        if self.days > 0 {
+            return write!(f, "{} days, {} hours", self.days, self.hours);
+        }
+        write!(f, "{} hours", self.hours)
     }
 }
