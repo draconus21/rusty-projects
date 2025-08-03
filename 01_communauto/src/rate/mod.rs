@@ -4,12 +4,12 @@ use super::utils::{Time, TripDuration};
 use std::fmt::Display;
 
 #[derive(PartialEq, Debug)]
-pub struct OpenTrip {
+pub struct Trip {
     start_time: Time,
     end_time: Time,
     distance: u32,
 }
-impl OpenTrip {
+impl Trip {
     fn validate_trip_time(start_time: Time, end_time: Time) {
         if start_time >= end_time {
             panic!(
@@ -20,7 +20,7 @@ impl OpenTrip {
     }
 
     pub fn new(start_time: Time, end_time: Time, distance: u32) -> Self {
-        OpenTrip::validate_trip_time(start_time, end_time);
+        Self::validate_trip_time(start_time, end_time);
         Self {
             start_time,
             end_time,
@@ -32,7 +32,7 @@ impl OpenTrip {
         &self.start_time
     }
     pub fn set_start_time(&self, start_time: Time) -> Self {
-        OpenTrip::validate_trip_time(start_time, self.end_time);
+        Self::validate_trip_time(start_time, self.end_time);
         Self {
             start_time: start_time,
             end_time: self.end_time,
@@ -43,7 +43,7 @@ impl OpenTrip {
         &self.end_time
     }
     pub fn set_end_time(&self, end_time: Time) -> Self {
-        OpenTrip::validate_trip_time(self.start_time, end_time);
+        Self::validate_trip_time(self.start_time, end_time);
         Self {
             start_time: self.start_time,
             end_time: end_time,
@@ -73,7 +73,7 @@ trait Cost {
     fn trip_cost(&self) -> f32;
 }
 
-impl Cost for OpenTrip {
+impl Cost for Trip {
     fn trip_cost(&self) -> f32 {
         self.km_cost() + self.time_cost()
     }
@@ -115,7 +115,7 @@ impl Cost for OpenTrip {
     }
 }
 
-impl Display for OpenTrip {
+impl Display for Trip {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "--------------Plan: Open--------------")?;
         writeln!(f, "From         : {}", self.start_time)?;
