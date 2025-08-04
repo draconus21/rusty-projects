@@ -1,6 +1,7 @@
 mod rate;
 mod utils;
 
+use crate::rate::openplustier::OpenPlusTrip;
 use crate::rate::opentier::OpenTrip;
 use crate::utils::Time;
 use std::io;
@@ -41,6 +42,6 @@ fn main() {
     let start = Time::now();
     let end = Time::tomorrow();
     let dist = 175;
-    let open_rate = OpenTrip::new(start, end, dist);
-    println!("{}", open_rate);
+    println!("{}", OpenTrip::new(start, end, dist));
+    println!("{}", OpenPlusTrip::new(start, end, dist));
 }
