@@ -2,7 +2,8 @@
 mod tests {
 
     use super::super::super::utils::Time;
-    use super::super::{Cost, OpenTrip};
+    use super::super::Cost;
+    use super::super::opentier::OpenTrip;
     use assert_float_eq::*;
 
     #[test]

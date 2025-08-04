@@ -1,7 +1,7 @@
 mod rate;
 mod utils;
 
-use crate::rate::OpenTrip;
+use crate::rate::opentier::OpenTrip;
 use crate::utils::Time;
 use std::io;
 
