@@ -1,3 +1,4 @@
+mod plan;
 mod rate;
 mod utils;
 
