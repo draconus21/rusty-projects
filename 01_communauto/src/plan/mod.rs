@@ -18,6 +18,14 @@ enum Plan {
         first_day_max: f32,
         day_max: f32,
     },
+    Value {
+        km_1: u32,
+        km_rate_1: f32,
+        km_rate_2: f32,
+        hour_rate: f32,
+        first_day_max: f32,
+        day_max: f32,
+    },
 }
 
 const OPEN_TRIP: Plan = Plan::Open {
@@ -34,6 +42,14 @@ const OPEN_PLUS_TRIP: Plan = Plan::OpenPlus {
     hour_rate: 6.85,
     first_day_max: 50.0,
     day_max: 35.0,
+};
+const VALUE_TRIP: Plan = Plan::OpenPlus {
+    km_1: 50,
+    km_rate_1: 0.45,
+    km_rate_2: 0.32,
+    hour_rate: 3.60,
+    first_day_max: 30.0,
+    day_max: 30.0,
 };
 
 impl Plan {
@@ -60,13 +76,16 @@ impl Plan {
                 hour_rate: _,
                 first_day_max: _,
                 day_max: _,
-            } => {
-                if distance_km <= *km_1 {
-                    return distance_km as f32 * *km_rate_1;
-                } else {
-                    return *km_1 as f32 * *km_rate_1 + (distance_km - km_1) as f32 * km_rate_2;
-                }
-            }
+            } => tiered_km_cost_calculator(km_1, km_rate_1, km_rate_2, distance_km),
+
+            Plan::Value {
+                km_1,
+                km_rate_1,
+                km_rate_2,
+                hour_rate: _,
+                first_day_max: _,
+                day_max: _,
+            } => tiered_km_cost_calculator(km_1, km_rate_1, km_rate_2, distance_km),
         }
     }
     fn time_cost(&self, duration: TripDuration) -> f32 {
@@ -87,6 +106,15 @@ impl Plan {
                 first_day_max,
                 day_max,
             } => time_cost_calculator(hour_rate, first_day_max, day_max, duration),
+
+            Plan::Value {
+                km_1: _,
+                km_rate_1: _,
+                km_rate_2: _,
+                hour_rate,
+                first_day_max,
+                day_max,
+            } => time_cost_calculator(hour_rate, first_day_max, day_max, duration),
         }
     }
 
@@ -94,6 +122,19 @@ impl Plan {
         let distance_cost = self.km_cost(*trip.distance());
         let time_cost = self.time_cost(trip.trip_time());
         distance_cost + time_cost
+    }
+}
+
+fn tiered_km_cost_calculator(
+    km_1: &u32,
+    km_rate_1: &f32,
+    km_rate_2: &f32,
+    distance_km: u32,
+) -> f32 {
+    if distance_km <= *km_1 {
+        return distance_km as f32 * *km_rate_1;
+    } else {
+        return *km_1 as f32 * *km_rate_1 + (distance_km - km_1) as f32 * km_rate_2;
     }
 }
 
