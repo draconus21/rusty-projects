@@ -10,7 +10,14 @@ enum Plan {
         first_day_max: f32,
         day_max: f32,
     },
-    //OpenPlus {},
+    OpenPlus {
+        km_1: u32,
+        km_rate_1: f32,
+        km_rate_2: f32,
+        hour_rate: f32,
+        first_day_max: f32,
+        day_max: f32,
+    },
 }
 
 const OPEN_TRIP: Plan = Plan::Open {
@@ -19,6 +26,14 @@ const OPEN_TRIP: Plan = Plan::Open {
     hour_rate: 13.5,
     first_day_max: 55.0,
     day_max: 50.0,
+};
+const OPEN_PLUS_TRIP: Plan = Plan::OpenPlus {
+    km_1: 50,
+    km_rate_1: 0.25,
+    km_rate_2: 0.22,
+    hour_rate: 6.85,
+    first_day_max: 50.0,
+    day_max: 35.0,
 };
 
 impl Plan {
@@ -37,6 +52,21 @@ impl Plan {
                     return (distance_km - *included_km) as f32 * excess_km_rate;
                 }
             }
+
+            Plan::OpenPlus {
+                km_1,
+                km_rate_1,
+                km_rate_2,
+                hour_rate: _,
+                first_day_max: _,
+                day_max: _,
+            } => {
+                if distance_km <= *km_1 {
+                    return distance_km as f32 * *km_rate_1;
+                } else {
+                    return *km_1 as f32 * *km_rate_1 + (distance_km - km_1) as f32 * km_rate_2;
+                }
+            }
         }
     }
     fn time_cost(&self, duration: TripDuration) -> f32 {
@@ -47,32 +77,16 @@ impl Plan {
                 hour_rate,
                 first_day_max,
                 day_max,
-            } => {
-                let total_days: u32 = duration.days() + duration.weeks() * 7;
-                let mut hour_cost: f32 = duration.hours() * *hour_rate;
+            } => time_cost_calculator(hour_rate, first_day_max, day_max, duration),
 
-                // Case 1: less than 24 hours
-                if total_days == 0 {
-                    if hour_cost < *first_day_max {
-                        return hour_cost;
-                    } else {
-                        return *first_day_max;
-                    }
-                } else {
-                    // cap excess hour cost to day_max
-                    if hour_cost > *day_max {
-                        hour_cost = *day_max;
-                    }
-
-                    // Case 2: 1 day < duration < 2 days
-                    if total_days == 1 {
-                        return *first_day_max + hour_cost;
-                    } else {
-                        //Case 3: duration > 2 days
-                        return *first_day_max + (total_days - 1) as f32 * *day_max + hour_cost;
-                    }
-                }
-            }
+            Plan::OpenPlus {
+                km_1: _,
+                km_rate_1: _,
+                km_rate_2: _,
+                hour_rate,
+                first_day_max,
+                day_max,
+            } => time_cost_calculator(hour_rate, first_day_max, day_max, duration),
         }
     }
 
@@ -80,5 +94,37 @@ impl Plan {
         let distance_cost = self.km_cost(*trip.distance());
         let time_cost = self.time_cost(trip.trip_time());
         distance_cost + time_cost
+    }
+}
+
+fn time_cost_calculator(
+    hour_rate: &f32,
+    first_day_max: &f32,
+    day_max: &f32,
+    duration: TripDuration,
+) -> f32 {
+    let total_days: u32 = duration.days() + duration.weeks() * 7;
+    let mut hour_cost: f32 = duration.hours() * *hour_rate;
+
+    // Case 1: less than 24 hours
+    if total_days == 0 {
+        if hour_cost < *first_day_max {
+            return hour_cost;
+        } else {
+            return *first_day_max;
+        }
+    } else {
+        // cap excess hour cost to day_max
+        if hour_cost > *day_max {
+            hour_cost = *day_max;
+        }
+
+        // Case 2: 1 day < duration < 2 days
+        if total_days == 1 {
+            return *first_day_max + hour_cost;
+        } else {
+            //Case 3: duration > 2 days
+            return *first_day_max + (total_days - 1) as f32 * *day_max + hour_cost;
+        }
     }
 }
