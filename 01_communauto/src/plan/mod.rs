@@ -1,9 +1,12 @@
 use crate::utils::{Trip, TripDuration};
+use std::fmt;
 
 mod tests;
 
+#[derive(Debug)]
 enum Plan {
     Open {
+        plan_name: &'static str,
         included_km: u32,
         excess_km_rate: f32,
         hour_rate: f32,
@@ -11,6 +14,7 @@ enum Plan {
         day_rate: f32,
     },
     Tiered {
+        plan_name: &'static str,
         km_1: u32,
         km_rate_1: f32,
         km_rate_2: f32,
@@ -19,6 +23,7 @@ enum Plan {
         day_rate: f32,
     },
     LongDistance {
+        plan_name: &'static str,
         km_1: u32,
         km_rate_1: f32,
         km_rate_2: f32,
@@ -29,6 +34,7 @@ enum Plan {
 }
 
 const OPEN_TRIP: Plan = Plan::Open {
+    plan_name: "Open",
     included_km: 75,
     excess_km_rate: 0.27,
     hour_rate: 13.5,
@@ -36,6 +42,7 @@ const OPEN_TRIP: Plan = Plan::Open {
     day_rate: 50.0,
 };
 const OPEN_PLUS_TRIP: Plan = Plan::Tiered {
+    plan_name: "Open Plus",
     km_1: 50,
     km_rate_1: 0.25,
     km_rate_2: 0.22,
@@ -44,6 +51,7 @@ const OPEN_PLUS_TRIP: Plan = Plan::Tiered {
     day_rate: 35.0,
 };
 const VALUE_TRIP: Plan = Plan::Tiered {
+    plan_name: "Value",
     km_1: 50,
     km_rate_1: 0.45,
     km_rate_2: 0.32,
@@ -52,6 +60,7 @@ const VALUE_TRIP: Plan = Plan::Tiered {
     day_rate: 30.0,
 };
 const VALUE_PLUS_TRIP: Plan = Plan::Tiered {
+    plan_name: "Value Plus",
     km_1: 50,
     km_rate_1: 0.37,
     km_rate_2: 0.29,
@@ -60,7 +69,8 @@ const VALUE_PLUS_TRIP: Plan = Plan::Tiered {
     day_rate: 26.0,
 };
 
-const LONG_DISTANCE_HIGH: Plan = Plan::LongDistance {
+const LONG_DISTANCE_HIGH_TRIP: Plan = Plan::LongDistance {
+    plan_name: "Long Distance (high season)",
     km_1: 300,
     km_rate_1: 0.23,
     km_rate_2: 0.15,
@@ -68,7 +78,8 @@ const LONG_DISTANCE_HIGH: Plan = Plan::LongDistance {
     day_rate: 42.0,
     week_rate: 220.0,
 };
-const LONG_DISTANCE_LOW: Plan = Plan::LongDistance {
+const LONG_DISTANCE_LOW_TRIP: Plan = Plan::LongDistance {
+    plan_name: "Long Distance (low season)",
     km_1: 300,
     km_rate_1: 0.23,
     km_rate_2: 0.15,
@@ -77,10 +88,59 @@ const LONG_DISTANCE_LOW: Plan = Plan::LongDistance {
     week_rate: 185.0,
 };
 
+#[derive(Debug)]
+struct CostBreakdown {
+    plan_name: String,
+    distance_cost: f32,
+    time_cost: f32,
+    total_cost: f32,
+}
+impl fmt::Display for CostBreakdown {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "{}", self.plan_name)?;
+        writeln!(f, "Distance cost: {}", self.distance_cost)?;
+        writeln!(f, "Time cost: {}", self.time_cost)?;
+        writeln!(f, "Total cost: {}", self.total_cost)?;
+        Ok(())
+    }
+}
 impl Plan {
+    fn plan_name(&self) -> &str {
+        match self {
+            Plan::Open {
+                plan_name,
+                included_km: _,
+                excess_km_rate: _,
+                hour_rate: _,
+                first_day: _,
+                day_rate: _,
+            } => plan_name,
+
+            Plan::Tiered {
+                plan_name,
+                km_1: _,
+                km_rate_1: _,
+                km_rate_2: _,
+                hour_rate: _,
+                first_day: _,
+                day_rate: _,
+            } => plan_name,
+
+            Plan::LongDistance {
+                plan_name,
+                km_1: _,
+                km_rate_1: _,
+                km_rate_2: _,
+                first_day: _,
+                day_rate: _,
+                week_rate: _,
+            } => plan_name,
+        }
+    }
     fn km_cost(&self, distance_km: u32) -> f32 {
         match self {
             Plan::Open {
+                plan_name: _,
                 included_km,
                 excess_km_rate,
                 hour_rate: _,
@@ -95,6 +155,7 @@ impl Plan {
             }
 
             Plan::Tiered {
+                plan_name: _,
                 km_1,
                 km_rate_1,
                 km_rate_2,
@@ -104,6 +165,7 @@ impl Plan {
             } => tiered_km_cost_calculator(km_1, km_rate_1, km_rate_2, distance_km),
 
             Plan::LongDistance {
+                plan_name: _,
                 km_1,
                 km_rate_1,
                 km_rate_2,
@@ -117,6 +179,7 @@ impl Plan {
     fn time_cost(&self, duration: &TripDuration) -> f32 {
         match self {
             Plan::Open {
+                plan_name: _,
                 included_km: _,
                 excess_km_rate: _,
                 hour_rate,
@@ -125,6 +188,7 @@ impl Plan {
             } => time_cost_calculator(hour_rate, first_day, day_rate, duration),
 
             Plan::Tiered {
+                plan_name: _,
                 km_1: _,
                 km_rate_1: _,
                 km_rate_2: _,
@@ -134,6 +198,7 @@ impl Plan {
             } => time_cost_calculator(hour_rate, first_day, day_rate, duration),
 
             Plan::LongDistance {
+                plan_name: _,
                 km_1: _,
                 km_rate_1: _,
                 km_rate_2: _,
@@ -169,10 +234,16 @@ impl Plan {
         }
     }
 
-    fn calculate_cost(&self, trip: &Trip) -> f32 {
+    fn calculate_cost(&self, trip: &Trip) -> CostBreakdown {
         let distance_cost = self.km_cost(*trip.distance());
         let time_cost = self.time_cost(&trip.trip_time());
-        distance_cost + time_cost
+
+        CostBreakdown {
+            plan_name: self.plan_name().to_string(),
+            distance_cost: distance_cost,
+            time_cost: time_cost,
+            total_cost: distance_cost + time_cost,
+        }
     }
 }
 
