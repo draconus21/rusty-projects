@@ -18,14 +18,14 @@ enum Plan {
         first_day: f32,
         day_rate: f32,
     },
-    //LongDistance {
-    //    km_1: u32,
-    //    km_rate_1: f32,
-    //    km_rate_2: f32,
-    //    first_day: f32,
-    //    day_rate: f32,
-    //    week_rate: f32,
-    //},
+    LongDistance {
+        km_1: u32,
+        km_rate_1: f32,
+        km_rate_2: f32,
+        first_day: f32,
+        day_rate: f32,
+        week_rate: f32,
+    },
 }
 
 const OPEN_TRIP: Plan = Plan::Open {
@@ -60,14 +60,22 @@ const VALUE_PLUS_TRIP: Plan = Plan::Tiered {
     day_rate: 26.0,
 };
 
-//const LONG_DISTANCE_PEAK: Plan = Plan::LongDistance {
-//    km_1: 300,
-//    km_rate_1: 0.23,
-//    km_rate_2: 0.15,
-//    first_day: 50.0,
-//    day_rate: 42.0,
-//    week_rate: 220.0,
-//};
+const LONG_DISTANCE_HIGH: Plan = Plan::LongDistance {
+    km_1: 300,
+    km_rate_1: 0.23,
+    km_rate_2: 0.15,
+    first_day: 50.0,
+    day_rate: 42.0,
+    week_rate: 220.0,
+};
+const LONG_DISTANCE_LOW: Plan = Plan::LongDistance {
+    km_1: 300,
+    km_rate_1: 0.23,
+    km_rate_2: 0.15,
+    first_day: 40.0,
+    day_rate: 29.95,
+    week_rate: 185.0,
+};
 
 impl Plan {
     fn km_cost(&self, distance_km: u32) -> f32 {
@@ -94,9 +102,19 @@ impl Plan {
                 first_day: _,
                 day_rate: _,
             } => tiered_km_cost_calculator(km_1, km_rate_1, km_rate_2, distance_km),
+
+            Plan::LongDistance {
+                km_1,
+                km_rate_1,
+                km_rate_2,
+                first_day: _,
+                day_rate: _,
+                week_rate: _,
+            } => tiered_km_cost_calculator(km_1, km_rate_1, km_rate_2, distance_km),
         }
     }
-    fn time_cost(&self, duration: TripDuration) -> f32 {
+
+    fn time_cost(&self, duration: &TripDuration) -> f32 {
         match self {
             Plan::Open {
                 included_km: _,
@@ -114,12 +132,46 @@ impl Plan {
                 first_day,
                 day_rate,
             } => time_cost_calculator(hour_rate, first_day, day_rate, duration),
+
+            Plan::LongDistance {
+                km_1: _,
+                km_rate_1: _,
+                km_rate_2: _,
+                first_day,
+                day_rate,
+                week_rate,
+            } => {
+                let eps: f32 = 1e-6;
+                if (*duration.weeks() == 0 && *duration.days() == 0) // trip < 24 hrs
+                    || (*duration.weeks() == 0
+                        && ((*duration.hours() - 0.00).abs() < eps)
+                        && *duration.days() == 1)
+                // trip == 24 hrs
+                {
+                    return *first_day;
+                }
+
+                let mut hour_cost: f32 = 0.0;
+                if (*duration.hours() - 0.00).abs() > eps {
+                    hour_cost = *day_rate;
+                }
+
+                // Less than one week
+                if *duration.weeks() == 0 {
+                    return hour_cost + *first_day + (*duration.days() - 1) as f32 * day_rate;
+                } else {
+                    // more than a week
+                    return hour_cost
+                        + *duration.weeks() as f32 * week_rate
+                        + *duration.days() as f32 * day_rate;
+                }
+            }
         }
     }
 
     fn calculate_cost(&self, trip: &Trip) -> f32 {
         let distance_cost = self.km_cost(*trip.distance());
-        let time_cost = self.time_cost(trip.trip_time());
+        let time_cost = self.time_cost(&trip.trip_time());
         distance_cost + time_cost
     }
 }
@@ -141,7 +193,7 @@ fn time_cost_calculator(
     hour_rate: &f32,
     first_day: &f32,
     day_rate: &f32,
-    duration: TripDuration,
+    duration: &TripDuration,
 ) -> f32 {
     let total_days: u32 = duration.days() + duration.weeks() * 7;
     let mut hour_cost: f32 = duration.hours() * *hour_rate;
