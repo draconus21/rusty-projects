@@ -55,11 +55,11 @@ mod test {
     }
     #[test]
     fn test_total_cost() {
-        let start = Time::new(16, 32, 3, 8, 2025);
-        let end = Time::new(18, 32, 3, 8, 2025);
+        let start = Time::new(17, 5, 4, 8, 2025);
+        let end = Time::new(21, 25, 12, 8, 2025);
 
-        // 2 hr OpenTrip
-        let t = Trip::new(start, end, 125);
-        assert_f32_near!(OPEN_TRIP.calculate_cost(t), 40.5);
+        let t = Trip::new(start, end, 422);
+        assert_f32_near!(OPEN_PLUS_TRIP.calculate_cost(&t), 419.02335);
+        assert_f32_near!(VALUE_TRIP.calculate_cost(&t), 397.14);
     }
 }
